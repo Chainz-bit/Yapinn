@@ -8,7 +8,10 @@ import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // TODO(1): Inisialisasi Firebase di sini.
+  // Petunjuk: await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   final savedName = await Session.loadSavedName();
   runApp(App(initialName: savedName));
 }

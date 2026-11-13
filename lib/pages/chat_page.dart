@@ -17,14 +17,13 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
-  // Disimpan sekali supaya tidak membuat listener baru setiap rebuild.
-  late final _stream = ChatService.watchMessages(widget.room.id);
-
   Future<void> _confirmDelete(Message m) async {
-    final ok = await showDeleteMessageSheet(context);
-    if (!ok || !mounted) return;
-    ChatService.deleteMessage(widget.room.id, m.id); // tanpa await
-    showToast(context, 'Pesan dihapus');
+    // TODO(6b): Konfirmasi lalu hapus pesan.
+    // Petunjuk:
+    //   final ok = await showDeleteMessageSheet(context);
+    //   kalau !ok atau !mounted → return
+    //   ChatService.deleteMessage(widget.room.id, m.id);   (tanpa await)
+    //   showToast(context, 'Pesan dihapus');
   }
 
   @override
@@ -50,39 +49,25 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: ColoredBox(
               color: kChatBg,
-              child: StreamBuilder<List<Message>>(
-                stream: _stream,
-                builder: (context, snap) {
-                  if (snap.hasError) {
-                    debugPrint('${snap.error}');
-                    return const EmptyState(icon: Icons.error_outline, text: 'Gagal memuat pesan');
-                  }
-                  if (!snap.hasData) return const ChatSkeleton();
-                  final messages = snap.data!;
-                  if (messages.isEmpty) {
-                    return const EmptyState(
-                      icon: Icons.waving_hand_outlined,
-                      text: 'Belum ada pesan.\nSapa duluan!',
-                    );
-                  }
-                  return ListView.builder(
-                    reverse: true, // + data descending = terbaru di bawah
-                    padding: const EdgeInsets.all(12),
-                    itemCount: messages.length,
-                    itemBuilder: (_, i) {
-                      final m = messages[i];
-                      return MessageBubble(
-                        key: ValueKey(m.id),
-                        message: m,
-                        onLongPress: m.isMine ? () => _confirmDelete(m) : null,
-                      );
-                    },
-                  );
-                },
+              // TODO(4b): Ganti dengan StreamBuilder<List<Message>> dari ChatService.watchMessages(widget.room.id).
+              //   Simpan stream-nya sekali sebagai field (late final), jangan dibuat ulang tiap build.
+              //   error → EmptyState(icon: Icons.error_outline, text: 'Gagal memuat pesan')
+              //   loading → ChatSkeleton()
+              //   kosong → EmptyState(icon: Icons.waving_hand_outlined, text: 'Belum ada pesan.\nSapa duluan!')
+              //   ada data → ListView.builder(reverse: true, padding: EdgeInsets.all(12), ...)
+              //              tiap item: MessageBubble(key: ValueKey(m.id), message: m,
+              //                         onLongPress: m.isMine ? () => _confirmDelete(m) : null)
+              child: const EmptyState(
+                icon: Icons.construction_outlined,
+                text: 'TODO 4b\nTampilkan pesan di sini',
               ),
             ),
           ),
-          MessageInput(onSend: (text) => ChatService.sendMessage(widget.room.id, text)),
+          MessageInput(
+            onSend: (text) {
+              // TODO(5b): Kirim pesan pakai ChatService.sendMessage(widget.room.id, text). Tanpa await.
+            },
+          ),
         ],
       ),
     );

@@ -5,73 +5,43 @@ import '../models/room.dart';
 import '../session.dart';
 
 /// SATU-SATUNYA tempat akses Firestore di app ini.
+/// Struktur data ada di specs/ (rooms/{roomId} dan rooms/{roomId}/messages/{messageId}).
 class ChatService {
   static final _db = FirebaseFirestore.instance;
 
-  /// Daftar room realtime, yang paling baru ada pesan di atas.
-  static Stream<List<Room>> watchRooms() => _db
-      .collection('rooms')
-      .orderBy('lastMessageAt', descending: true)
-      .snapshots()
-      .map((s) => s.docs.map(Room.fromDoc).toList());
+  // TODO(2a): Ambil daftar room secara realtime.
+  // Petunjuk: _db.collection('rooms') → orderBy('lastMessageAt', descending: true)
+  //           → snapshots() → map ke List<Room> pakai Room.fromDoc
+  static Stream<List<Room>> watchRooms() => Stream.value(const []);
 
-  /// Buat room baru.
-  static Future<void> createRoom(String name) => _db.collection('rooms').add({
-        'name': name,
-        'createdBy': Session.userName,
-        'createdAt': FieldValue.serverTimestamp(),
-        'lastMessage': null,
-        'lastSenderName': null,
-        'lastMessageAt': FieldValue.serverTimestamp(), // supaya room baru langsung di paling atas
-      });
+  // TODO(3a): Buat room baru.
+  // Petunjuk: _db.collection('rooms').add({...}) dengan field:
+  //   name, createdBy (Session.userName), createdAt (FieldValue.serverTimestamp()),
+  //   lastMessage: null, lastSenderName: null,
+  //   lastMessageAt (FieldValue.serverTimestamp(), supaya room baru langsung di paling atas)
+  static Future<void> createRoom(String name) async {}
 
-  /// Pesan realtime di satu room, terbaru dulu.
-  static Stream<List<Message>> watchMessages(String roomId) => _db
-      .collection('rooms')
-      .doc(roomId)
-      .collection('messages')
-      .orderBy('createdAt', descending: true)
-      .limit(50) // hemat kuota baca
-      .snapshots(includeMetadataChanges: true) // supaya status jam → centang ter-update
-      .map((s) => s.docs.map(Message.fromDoc).toList());
+  // TODO(4a): Ambil pesan di satu room secara realtime, terbaru dulu.
+  // Petunjuk: collection('rooms').doc(roomId).collection('messages')
+  //           → orderBy('createdAt', descending: true) → limit(50)
+  //           → snapshots(includeMetadataChanges: true)  ← supaya ikon jam → centang ter-update
+  //           → map ke List<Message> pakai Message.fromDoc
+  static Stream<List<Message>> watchMessages(String roomId) => Stream.value(const []);
 
-  /// Kirim pesan + update preview room dalam satu batch.
-  static Future<void> sendMessage(String roomId, String text) {
-    final roomRef = _db.collection('rooms').doc(roomId);
-    final batch = _db.batch();
+  // TODO(5a): Kirim pesan + update preview room.
+  // Petunjuk: pakai batch (_db.batch()) supaya dua tulisan tersimpan bersamaan:
+  //   1. batch.set(dokumen baru di rooms/{roomId}/messages, {text, senderId, senderName, createdAt})
+  //   2. batch.update(rooms/{roomId}, {lastMessage, lastSenderName, lastMessageAt})
+  //   lalu return batch.commit();
+  //   senderId/senderName dari Session, waktu pakai FieldValue.serverTimestamp().
+  static Future<void> sendMessage(String roomId, String text) async {}
 
-    batch.set(roomRef.collection('messages').doc(), {
-      'text': text,
-      'senderId': Session.userId,
-      'senderName': Session.userName,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-    batch.update(roomRef, {
-      'lastMessage': text,
-      'lastSenderName': Session.userName,
-      'lastMessageAt': FieldValue.serverTimestamp(),
-    });
-
-    return batch.commit();
-  }
-
-  /// Hapus pesan, lalu perbarui preview room dengan pesan terakhir yang tersisa.
-  static Future<void> deleteMessage(String roomId, String messageId) async {
-    final roomRef = _db.collection('rooms').doc(roomId);
-    await roomRef.collection('messages').doc(messageId).delete();
-
-    final latest = await roomRef
-        .collection('messages')
-        .orderBy('createdAt', descending: true)
-        .limit(1)
-        .get();
-
-    // lastMessageAt sengaja tidak diubah supaya urutan room tidak loncat-loncat.
-    if (latest.docs.isEmpty) {
-      await roomRef.update({'lastMessage': null, 'lastSenderName': null});
-    } else {
-      final d = latest.docs.first.data();
-      await roomRef.update({'lastMessage': d['text'], 'lastSenderName': d['senderName']});
-    }
-  }
+  // TODO(6a): Hapus pesan, lalu update preview room.
+  // Petunjuk:
+  //   1. delete dokumen rooms/{roomId}/messages/{messageId}
+  //   2. ambil 1 pesan terbaru yang tersisa (orderBy createdAt desc, limit 1, get())
+  //   3. kosong → update room {lastMessage: null, lastSenderName: null}
+  //      ada    → update room dengan text & senderName pesan itu
+  //   lastMessageAt JANGAN diubah supaya urutan room tidak loncat-loncat.
+  static Future<void> deleteMessage(String roomId, String messageId) async {}
 }
