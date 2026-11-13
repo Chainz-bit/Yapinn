@@ -47,7 +47,7 @@ class _RoomsPageState extends State<RoomsPage> {
           // TODO(3b): Buat room baru.
           // Petunjuk:
           //   final name = await showCreateRoomDialog(context);   (jadikan fungsi ini async)
-          //   kalau name == null atau !mounted → return
+          //   kalau name == null atau !context.mounted → return
           //   ChatService.createRoom(name);   (tanpa await)
           //   showToast(context, 'Room "$name" dibuat');
         },
