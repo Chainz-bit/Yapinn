@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/message.dart';
 import '../models/room.dart';
 import '../session.dart';
 
@@ -23,4 +24,14 @@ class ChatService {
         'lastSenderName': null,
         'lastMessageAt': FieldValue.serverTimestamp(), // supaya room baru langsung di paling atas
       });
+
+  /// Pesan realtime di satu room, terbaru dulu.
+  static Stream<List<Message>> watchMessages(String roomId) => _db
+      .collection('rooms')
+      .doc(roomId)
+      .collection('messages')
+      .orderBy('createdAt', descending: true)
+      .limit(50) // hemat kuota baca
+      .snapshots(includeMetadataChanges: true) // supaya status jam → centang ter-update
+      .map((s) => s.docs.map(Message.fromDoc).toList());
 }
