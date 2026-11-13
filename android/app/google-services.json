@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "414814714576",
+    "project_id": "yappin-73d32",
+    "storage_bucket": "yappin-73d32.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:414814714576:android:fc15c53d8ba1e89d1d3cd5",
+        "android_client_info": {
+          "package_name": "id.ac.polindra.yappin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCWOblGJ9y_q3pZR4-_LBsi7VgLw9CqwXc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
