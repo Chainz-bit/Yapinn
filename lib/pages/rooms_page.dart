@@ -1,11 +1,69 @@
 import 'package:flutter/material.dart';
 
-/// Daftar semua room (diisi di F2).
-class RoomsPage extends StatelessWidget {
+import '../models/room.dart';
+import '../services/chat_service.dart';
+import '../session.dart';
+import '../theme.dart';
+import '../widgets/widgets.dart';
+import 'chat_page.dart';
+
+/// Daftar semua room, realtime.
+class RoomsPage extends StatefulWidget {
   const RoomsPage({super.key});
 
   @override
+  State<RoomsPage> createState() => _RoomsPageState();
+}
+
+class _RoomsPageState extends State<RoomsPage> {
+  // Disimpan sekali supaya tidak membuat listener baru setiap rebuild.
+  late final _stream = ChatService.watchRooms();
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: const Text('Room')));
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Room'),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Text(
+              'Halo, ${Session.userName}',
+              style: const TextStyle(color: kSubtle, fontSize: 13),
+            ),
+          ),
+        ],
+      ),
+      body: StreamBuilder<List<Room>>(
+        stream: _stream,
+        builder: (context, snap) {
+          if (snap.hasError) {
+            debugPrint('${snap.error}');
+            return const EmptyState(icon: Icons.error_outline, text: 'Gagal memuat room');
+          }
+          if (!snap.hasData) return const RoomListSkeleton();
+          final rooms = snap.data!;
+          if (rooms.isEmpty) {
+            return const EmptyState(
+              icon: Icons.forum_outlined,
+              text: 'Belum ada room.\nBuat yang pertama!',
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.only(bottom: 96), // ruang untuk FAB
+            itemCount: rooms.length,
+            separatorBuilder: (_, _) => const Divider(height: 1, indent: 76),
+            itemBuilder: (_, i) => RoomTile(
+              key: ValueKey(rooms[i].id),
+              room: rooms[i],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ChatPage(room: rooms[i])),
+              ),
+            ),
+          );
+        },
+      ),
+    );
   }
 }
