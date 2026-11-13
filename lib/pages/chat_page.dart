@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/message.dart';
 import '../models/room.dart';
 import '../services/chat_service.dart';
+import '../session.dart';
 import '../theme.dart';
 import '../widgets/widgets.dart';
 
@@ -17,6 +18,18 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  @override
+  void initState() {
+    super.initState();
+    Session.openRoomId = widget.room.id; // untuk popup pesan baru
+  }
+
+  @override
+  void dispose() {
+    if (Session.openRoomId == widget.room.id) Session.openRoomId = null;
+    super.dispose();
+  }
+
   Future<void> _confirmDelete(Message m) async {
     // TODO(6b): Konfirmasi lalu hapus pesan.
     // Petunjuk:
