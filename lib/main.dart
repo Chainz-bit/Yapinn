@@ -2,16 +2,21 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
+import 'pages/name_page.dart';
+import 'session.dart';
 import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const App());
+  final savedName = await Session.loadSavedName();
+  runApp(App(initialName: savedName));
 }
 
 class App extends StatelessWidget {
-  const App({super.key});
+  final String? initialName;
+
+  const App({super.key, this.initialName});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,7 @@ class App extends StatelessWidget {
       title: 'Yappin',
       theme: appTheme,
       debugShowCheckedModeBanner: false,
-      home: const Scaffold(body: Center(child: Text('Yappin'))),
+      home: NamePage(initialName: initialName),
     );
   }
 }
