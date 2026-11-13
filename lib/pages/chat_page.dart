@@ -74,6 +74,7 @@ class _ChatPageState extends State<ChatPage> {
               ),
             ),
           ),
+          MessageInput(onSend: (text) => ChatService.sendMessage(widget.room.id, text)),
         ],
       ),
     );

@@ -34,4 +34,24 @@ class ChatService {
       .limit(50) // hemat kuota baca
       .snapshots(includeMetadataChanges: true) // supaya status jam → centang ter-update
       .map((s) => s.docs.map(Message.fromDoc).toList());
+
+  /// Kirim pesan + update preview room dalam satu batch.
+  static Future<void> sendMessage(String roomId, String text) {
+    final roomRef = _db.collection('rooms').doc(roomId);
+    final batch = _db.batch();
+
+    batch.set(roomRef.collection('messages').doc(), {
+      'text': text,
+      'senderId': Session.userId,
+      'senderName': Session.userName,
+      'createdAt': FieldValue.serverTimestamp(),
+    });
+    batch.update(roomRef, {
+      'lastMessage': text,
+      'lastSenderName': Session.userName,
+      'lastMessageAt': FieldValue.serverTimestamp(),
+    });
+
+    return batch.commit();
+  }
 }
