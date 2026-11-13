@@ -19,7 +19,5 @@ Tugasmu: ambil data dari Firebase di `lib/services/chat_service.dart`, lalu samb
 | 5a, 5b | chat_service.dart, chat_page.dart | Kirim pesan |
 | 6a, 6b | chat_service.dart, chat_page.dart | Hapus pesan |
 
-Detail tiap fitur ada di folder `specs/`.
-
 ## Ngintip jawaban
 `git checkout app` (usahakan setelah mencoba sendiri dulu ya 😄)

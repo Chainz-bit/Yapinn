@@ -5,7 +5,11 @@ import '../models/room.dart';
 import '../session.dart';
 
 /// SATU-SATUNYA tempat akses Firestore di app ini.
-/// Struktur data ada di specs/ (rooms/{roomId} dan rooms/{roomId}/messages/{messageId}).
+/// Struktur data Firestore:
+///   rooms/{roomId}
+///     name, createdBy, createdAt, lastMessage, lastSenderName, lastMessageAt
+///   rooms/{roomId}/messages/{messageId}
+///     text, senderId, senderName, createdAt
 class ChatService {
   static final _db = FirebaseFirestore.instance;
 
