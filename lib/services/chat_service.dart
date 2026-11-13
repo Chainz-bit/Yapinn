@@ -54,4 +54,24 @@ class ChatService {
 
     return batch.commit();
   }
+
+  /// Hapus pesan, lalu perbarui preview room dengan pesan terakhir yang tersisa.
+  static Future<void> deleteMessage(String roomId, String messageId) async {
+    final roomRef = _db.collection('rooms').doc(roomId);
+    await roomRef.collection('messages').doc(messageId).delete();
+
+    final latest = await roomRef
+        .collection('messages')
+        .orderBy('createdAt', descending: true)
+        .limit(1)
+        .get();
+
+    // lastMessageAt sengaja tidak diubah supaya urutan room tidak loncat-loncat.
+    if (latest.docs.isEmpty) {
+      await roomRef.update({'lastMessage': null, 'lastSenderName': null});
+    } else {
+      final d = latest.docs.first.data();
+      await roomRef.update({'lastMessage': d['text'], 'lastSenderName': d['senderName']});
+    }
+  }
 }

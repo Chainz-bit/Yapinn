@@ -20,6 +20,13 @@ class _ChatPageState extends State<ChatPage> {
   // Disimpan sekali supaya tidak membuat listener baru setiap rebuild.
   late final _stream = ChatService.watchMessages(widget.room.id);
 
+  Future<void> _confirmDelete(Message m) async {
+    final ok = await showDeleteMessageSheet(context);
+    if (!ok || !mounted) return;
+    ChatService.deleteMessage(widget.room.id, m.id); // tanpa await
+    showToast(context, 'Pesan dihapus');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -67,6 +74,7 @@ class _ChatPageState extends State<ChatPage> {
                       return MessageBubble(
                         key: ValueKey(m.id),
                         message: m,
+                        onLongPress: m.isMine ? () => _confirmDelete(m) : null,
                       );
                     },
                   );
