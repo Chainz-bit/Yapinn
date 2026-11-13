@@ -19,6 +19,13 @@ class _RoomsPageState extends State<RoomsPage> {
   // Disimpan sekali supaya tidak membuat listener baru setiap rebuild.
   late final _stream = ChatService.watchRooms();
 
+  Future<void> _createRoom() async {
+    final name = await showCreateRoomDialog(context);
+    if (name == null || !mounted) return;
+    ChatService.createRoom(name); // tanpa await: Firestore langsung menampilkan secara lokal
+    showToast(context, 'Room "$name" dibuat');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,6 +70,10 @@ class _RoomsPageState extends State<RoomsPage> {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _createRoom,
+        child: const Icon(Icons.add),
       ),
     );
   }
