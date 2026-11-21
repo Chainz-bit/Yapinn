@@ -16,6 +16,8 @@ class RoomsPage extends StatefulWidget {
 }
 
 class _RoomsPageState extends State<RoomsPage> {
+  late final _stream = ChatService.watchRooms();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,25 +33,48 @@ class _RoomsPageState extends State<RoomsPage> {
           ),
         ],
       ),
-      // TODO(2b): Ganti dengan StreamBuilder<List<Room>> dari ChatService.watchRooms().
-      //   Simpan stream-nya sekali sebagai field (late final), jangan dibuat ulang tiap build.
-      //   error → EmptyState(icon: Icons.error_outline, text: 'Gagal memuat room')
-      //   loading (belum ada data) → RoomListSkeleton()
-      //   kosong → EmptyState(icon: Icons.forum_outlined, text: 'Belum ada room.\nBuat yang pertama!')
-      //   ada data → ListView.separated + RoomTile(room: ..., onTap: buka ChatPage(room: ...))
-      //              separator: Divider(height: 1, indent: 76), padding bawah 96 (ruang FAB)
-      body: const EmptyState(
-        icon: Icons.construction_outlined,
-        text: 'TODO 2b\nTampilkan daftar room di sini',
+      body: StreamBuilder<List<Room>>(
+        stream: _stream,
+        builder: (context, snap) {
+          if (snap.hasError) {
+            debugPrint('${snap.error}');
+            return const EmptyState(icon: Icons.error_outline, text: 'Gagal memuat room');
+          }
+          if (!snap.hasData) return const RoomListSkeleton();
+          final rooms = snap.data!;
+          if (rooms.isEmpty) {
+            return const EmptyState(
+              icon: Icons.forum_outlined,
+              text: 'Belum ada room.\nBuat yang pertama!',
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.only(bottom: 96), // ruang untuk FAB
+            itemCount: rooms.length,
+            separatorBuilder: (_, _) => const Divider(height: 1, indent: 76),
+            itemBuilder: (_, i) => RoomTile(
+              key: ValueKey(rooms[i].id),
+              room: rooms[i],
+              onTap: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => ChatPage(room: rooms[i])),
+              ),
+              onLongPress: () async {
+                final newName = await showRenameRoomDialog(context, rooms[i].name);
+                if (newName == null || !context.mounted) return;
+                ChatService.renameRoom(rooms[i].id, newName);
+                showToast(context, 'Nama room diubah menjadi "$newName"');
+              },
+            ),
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO(3b): Buat room baru.
-          // Petunjuk:
-          //   final name = await showCreateRoomDialog(context);   (jadikan fungsi ini async)
-          //   kalau name == null atau !context.mounted → return
-          //   ChatService.createRoom(name);   (tanpa await)
-          //   showToast(context, 'Room "$name" dibuat');
+        onPressed: () async {
+          final name = await showCreateRoomDialog(context);
+          if (name == null || !context.mounted) return;
+          ChatService.createRoom(name); // tanpa await
+          showToast(context, 'Room "$name" dibuat');
         },
         child: const Icon(Icons.add),
       ),

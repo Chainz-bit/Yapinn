@@ -6,6 +6,7 @@ class Room {
   final String? lastMessage;
   final String? lastSenderName;
   final DateTime? lastMessageAt;
+  final int messageCount;
 
   Room({
     required this.id,
@@ -13,6 +14,7 @@ class Room {
     this.lastMessage,
     this.lastSenderName,
     this.lastMessageAt,
+    this.messageCount = 0,
   });
 
   factory Room.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -24,6 +26,7 @@ class Room {
       lastSenderName: data['lastSenderName'],
       // Bisa null sesaat (serverTimestamp belum balik dari server)
       lastMessageAt: (data['lastMessageAt'] as Timestamp?)?.toDate(),
+      messageCount: (data['messageCount'] as num?)?.toInt() ?? 0,
     );
   }
 }

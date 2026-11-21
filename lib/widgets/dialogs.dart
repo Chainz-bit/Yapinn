@@ -39,6 +39,43 @@ Future<String?> showCreateRoomDialog(BuildContext context) {
   );
 }
 
+/// Dialog ganti nama room. Return nama baru atau null kalau batal/kosong.
+Future<String?> showRenameRoomDialog(BuildContext context, String currentName) {
+  final controller = TextEditingController(text: currentName);
+
+  void submit(BuildContext dialogContext) {
+    final name = controller.text.trim();
+    Navigator.pop(dialogContext, name.isEmpty ? null : name);
+  }
+
+  return showDialog<String>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Text('Ganti nama room'),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        maxLength: 30,
+        decoration: const InputDecoration(hintText: 'Nama room baru'),
+        onSubmitted: (_) => submit(dialogContext),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          style: TextButton.styleFrom(foregroundColor: kSubtle),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: () => submit(dialogContext),
+          style: FilledButton.styleFrom(minimumSize: const Size(0, 44)),
+          child: const Text('Simpan'),
+        ),
+      ],
+    ),
+  );
+}
+
 /// Bottom sheet konfirmasi hapus pesan. Return true kalau user memilih hapus.
 Future<bool> showDeleteMessageSheet(BuildContext context) async {
   final result = await showModalBottomSheet<bool>(

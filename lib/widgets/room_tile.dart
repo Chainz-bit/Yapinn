@@ -9,8 +9,14 @@ import 'initial_avatar.dart';
 class RoomTile extends StatelessWidget {
   final Room room;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
-  const RoomTile({super.key, required this.room, required this.onTap});
+  const RoomTile({
+    super.key,
+    required this.room,
+    required this.onTap,
+    this.onLongPress,
+  });
 
   /// Ganti teks dengan halus (fade + sedikit perubahan tinggi).
   Widget _smooth(Widget child) {
@@ -44,6 +50,7 @@ class RoomTile extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
+      onLongPress: onLongPress,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
@@ -75,18 +82,42 @@ class RoomTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 4),
-                  _smooth(
-                    Text(
-                      preview,
-                      key: ValueKey(preview),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: kSubtle,
-                        fontSize: 14,
-                        fontStyle: hasMessage ? FontStyle.normal : FontStyle.italic,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _smooth(
+                          Text(
+                            preview,
+                            key: ValueKey(preview),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: kSubtle,
+                              fontSize: 14,
+                              fontStyle: hasMessage ? FontStyle.normal : FontStyle.italic,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
+                      if (room.messageCount > 0) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: kField,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '${room.messageCount}',
+                            style: const TextStyle(
+                              color: kSubtle,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ],
               ),

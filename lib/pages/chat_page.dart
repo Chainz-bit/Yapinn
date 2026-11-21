@@ -5,6 +5,7 @@ import '../models/room.dart';
 import '../services/chat_service.dart';
 import '../session.dart';
 import '../theme.dart';
+import '../utils.dart';
 import '../widgets/widgets.dart';
 
 /// Halaman chat satu room.
@@ -18,6 +19,8 @@ class ChatPage extends StatefulWidget {
 }
 
 class _ChatPageState extends State<ChatPage> {
+  late final _stream = ChatService.watchMessages(widget.room.id);
+
   @override
   void initState() {
     super.initState();
@@ -31,12 +34,10 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _confirmDelete(Message m) async {
-    // TODO(6b): Konfirmasi lalu hapus pesan.
-    // Petunjuk:
-    //   final ok = await showDeleteMessageSheet(context);
-    //   kalau !ok atau !mounted → return
-    //   ChatService.deleteMessage(widget.room.id, m.id);   (tanpa await)
-    //   showToast(context, 'Pesan dihapus');
+    final ok = await showDeleteMessageSheet(context);
+    if (!ok || !mounted) return;
+    ChatService.deleteMessage(widget.room.id, m.id); // tanpa await
+    showToast(context, 'Pesan dihapus');
   }
 
   @override
@@ -62,25 +63,72 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: ColoredBox(
               color: kChatBg,
-              // TODO(4b): Ganti dengan StreamBuilder<List<Message>> dari ChatService.watchMessages(widget.room.id).
-              //   Simpan stream-nya sekali sebagai field (late final), jangan dibuat ulang tiap build.
-              //   error → EmptyState(icon: Icons.error_outline, text: 'Gagal memuat pesan')
-              //   loading → ChatSkeleton()
-              //   kosong → EmptyState(icon: Icons.waving_hand_outlined, text: 'Belum ada pesan.\nSapa duluan!')
-              //   ada data → ListView.builder(reverse: true, padding: EdgeInsets.all(12), ...)
-              //              tiap item: MessageBubble(key: ValueKey(m.id), message: m,
-              //                         onLongPress: m.isMine ? () => _confirmDelete(m) : null)
-              child: const EmptyState(
-                icon: Icons.construction_outlined,
-                text: 'TODO 4b\nTampilkan pesan di sini',
+              child: StreamBuilder<List<Message>>(
+                stream: _stream,
+                builder: (context, snap) {
+                  if (snap.hasError) {
+                    debugPrint('${snap.error}');
+                    return const EmptyState(icon: Icons.error_outline, text: 'Gagal memuat pesan');
+                  }
+                  if (!snap.hasData) return const ChatSkeleton();
+                  final messages = snap.data!;
+                  if (messages.isEmpty) {
+                    return const EmptyState(
+                      icon: Icons.waving_hand_outlined,
+                      text: 'Belum ada pesan.\nSapa duluan!',
+                    );
+                  }
+                  return ListView.builder(
+                    reverse: true, // + data descending = terbaru di bawah
+                    padding: const EdgeInsets.all(12),
+                    itemCount: messages.length,
+                    itemBuilder: (_, i) {
+                      final m = messages[i];
+                      final isOldest = i == messages.length - 1;
+                      final isDifferentDay = isOldest ||
+                          !isSameDay(m.createdAt, messages[i + 1].createdAt);
+
+                      final bubble = MessageBubble(
+                        key: ValueKey(m.id),
+                        message: m,
+                        onLongPress: m.isMine ? () => _confirmDelete(m) : null,
+                      );
+
+                      if (!isDifferentDay || m.createdAt == null) {
+                        return bubble;
+                      }
+
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: kLine.withValues(alpha: 0.6),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                formatDateSeparator(m.createdAt),
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: kSubtle,
+                                ),
+                              ),
+                            ),
+                          ),
+                          bubble,
+                        ],
+                      );
+                    },
+                  );
+                },
               ),
             ),
           ),
-          MessageInput(
-            onSend: (text) {
-              // TODO(5b): Kirim pesan pakai ChatService.sendMessage(widget.room.id, text). Tanpa await.
-            },
-          ),
+          MessageInput(onSend: (text) => ChatService.sendMessage(widget.room.id, text)),
         ],
       ),
     );
